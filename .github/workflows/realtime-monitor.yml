@@ -1,0 +1,43 @@
+name: 实时行情预警
+
+on:
+  schedule:
+    - cron: '*/10 * * * 1-5'
+  workflow_dispatch:
+
+concurrency:
+  group: realtime-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: 设置 Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: 预警检查
+        env:
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECEIVERS: ${{ vars.EMAIL_RECEIVERS || secrets.EMAIL_RECEIVERS }}
+          PYTHONIOENCODING: utf-8
+        run: |
+          echo "=========================================="
+          echo "📡 实时行情预警监控"
+          echo "=========================================="
+          echo "⏰ 时间: $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')"
+          echo ""
+
+          python scripts/realtime_monitor.py
+
+          echo ""
+          echo "=========================================="
+          echo "✅ 检查完成"
+          echo "=========================================="
